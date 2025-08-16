@@ -3,100 +3,674 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Générateur de Poèmes</title>
-    <!-- Chargement de Tailwind CSS pour un design moderne et réactif -->
+    <title>Young Expert - Générateur de Poèmes & Galerie</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Utilisation de la police Inter pour une meilleure lisibilité -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
     <style>
-        /* Appliquer des polices personnalisées */
+    /* Smooth scroll pour ancres et scrolls programmés */
+    html { scroll-behavior: smooth; }
         body {
             font-family: 'Inter', sans-serif;
+            background: linear-gradient(120deg, #e0e7ff 0%, #f0fdfa 100%);
+            transition: background 0.5s;
+        }
+        .dark body {
+            background: linear-gradient(120deg, #1e293b 0%, #0f172a 100%);
         }
         #poem-output {
             font-family: 'Lora', serif;
         }
+        .carousel-img {
+            max-height: 320px;
+            object-fit: cover;
+            border-radius: 1rem;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+            transition: transform 0.5s;
+        }
+        .carousel-img.active {
+            transform: scale(1.05);
+        }
+        .theme-btn {
+            transition: transform 0.18s, box-shadow 0.18s;
+        }
+        .theme-btn:hover { transform: translateY(-3px); }
+        .theme-btn.active {
+            box-shadow: 0 8px 30px rgba(99,102,241,0.18);
+            transform: translateY(-4px) scale(1.02);
+            background: linear-gradient(90deg,#a78bfa,#06b6d4);
+            color: white !important;
+            border-color: transparent !important;
+        }
+    /* Social icons hover effect */
+    .social-icon{ transition: transform .18s ease, background .18s ease, color .18s ease; }
+    .social-icon:hover{ transform: translateY(-4px) scale(1.08); background: linear-gradient(90deg,#06b6d4,#a78bfa); color: white; }
+    /* Hide scrollbar but keep scrolling for the theme carousel */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    /* Slight visual for carousel items */
+    #theme-carousel .theme-btn { display: inline-block; white-space: nowrap; }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
-
-    <!-- Conteneur principal de l'application -->
-    <div class="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center">
-        
-        <!-- Titre de l'application -->
-        <h1 class="text-3xl md:text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-4">Générateur de Poèmes</h1>
-        <p class="text-gray-600 dark:text-gray-400 mb-8">Cliquez sur le bouton pour composer un poème unique et surprenant.</p>
-
-        <!-- Zone d'affichage pour le poème généré -->
-        <div id="poem-container" class="min-h-[150px] bg-gray-50 dark:bg-gray-700 rounded-lg p-6 mb-8 flex items-center justify-center transition-all duration-300">
-            <p id="poem-output" class="text-lg md:text-xl italic text-gray-700 dark:text-gray-300 whitespace-pre-line">Votre poème apparaîtra ici...</p>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen flex flex-col">
+    <!-- En-tête moderne -->
+    <header class="w-full bg-gradient-to-r from-indigo-600 to-cyan-500 dark:from-indigo-900 dark:to-cyan-800 shadow-lg py-4 px-6 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <img src="images/young_logo.svg" alt="Young Expert" class="h-12 w-12 rounded-full border-4 border-white shadow-md">
+            <a href="https://youngexpertseditions.vercel.app" target="_blank" rel="noopener noreferrer" title="Young Expert — site officiel" class="text-2xl font-bold text-white tracking-wide"> <span class="text-orange-400">Young</span> <span class="text-white">Expert</span></a>
         </div>
-
-        <!-- Bouton pour générer un nouveau poème -->
-        <button id="generate-btn" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-800">
-            Générer un poème
+        <nav class="hidden md:flex gap-8">
+            <a href="#poeme" class="text-white hover:text-yellow-200 font-medium transition">Poème</a>
+            <a href="#galerie" class="text-white hover:text-yellow-200 font-medium transition">Galerie</a>
+            <a href="#contact" class="text-white hover:text-yellow-200 font-medium transition">Contact</a>
+        </nav>
+        <button id="theme-toggle" class="ml-4 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition" title="Changer de thème" aria-label="Changer de thème">
+            <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-13.66l-.71.71M4.05 19.07l-.71.71M21 12h-1M4 12H3m16.66 5.66l-.71-.71M4.05 4.93l-.71-.71M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
         </button>
+    </header>
 
-    </div>
+    <!-- Section Poème -->
+    <main class="flex-1 flex flex-col items-center justify-center py-8 px-2" id="poeme">
+        <div class="w-full max-w-2xl mx-auto bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-2xl p-8 text-center backdrop-blur-md">
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-4">Générateur de Poèmes — résultat de la <a href="https://youngexpertseditions.vercel.app" target="_blank" rel="noopener noreferrer" title="Young Expert — site officiel" class="font-semibold text-orange-400">Young Expert</a></h1>
+            <p class="text-gray-600 dark:text-gray-400 mb-6">Choisissez un thème et personnalisez le poème avant de générer.</p>
 
+            <!-- Recherche de thèmes + carrousel -->
+            <div class="mb-4 w-full max-w-xl mx-auto">
+                <input id="theme-search" type="search" placeholder="Rechercher un thème..." class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm" />
+                <div class="mt-3 relative">
+                    <button id="theme-prev" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-700/80 hover:bg-indigo-200 dark:hover:bg-indigo-800 rounded-full p-2 shadow transition">◀</button>
+                    <div id="theme-carousel" class="overflow-x-auto no-scrollbar whitespace-nowrap px-12 py-2 flex gap-3"></div>
+                    <button id="theme-next" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-700/80 hover:bg-indigo-200 dark:hover:bg-indigo-800 rounded-full p-2 shadow transition">▶</button>
+                </div>
+                <!-- Boutons rapides populaires -->
+                <div class="mt-4 flex flex-wrap items-center justify-center gap-3" role="tablist" aria-label="Thèmes populaires">
+                    <button class="theme-btn px-4 py-2 rounded-full border border-indigo-200 dark:border-gray-700 bg-indigo-50 dark:bg-gray-700 text-sm font-medium text-indigo-700 dark:text-indigo-200 shadow-sm" data-theme="nature">Nature</button>
+                    <button class="theme-btn px-4 py-2 rounded-full border border-indigo-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200" data-theme="melancolie">Mélancolie</button>
+                    <button class="theme-btn px-4 py-2 rounded-full border border-indigo-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200" data-theme="urbain">Urbain</button>
+                    <button class="theme-btn px-4 py-2 rounded-full border border-indigo-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200" data-theme="ephemere">Éphémère</button>
+                </div>
+                <div class="mt-4 flex items-center justify-center gap-3">
+                    <button id="export-settings" class="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20">Exporter</button>
+                    <label for="import-file" class="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 cursor-pointer">Importer</label>
+                    <input id="import-file" type="file" accept="application/json" class="hidden" />
+                </div>
+            </div>
+
+            <!-- Personnalisation du poème -->
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-center gap-3">
+                <label class="flex items-center gap-2 text-sm">
+                    <span>Vers :</span>
+                    <select id="lines-select" class="ml-2 rounded-md px-2 py-1 text-sm bg-white dark:bg-gray-700">
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                </label>
+                <label class="flex items-center gap-2 text-sm">
+                    <span>Ton :</span>
+                    <select id="tone-select" class="ml-2 rounded-md px-2 py-1 text-sm bg-white dark:bg-gray-700">
+                        <option value="neutral">Neutre</option>
+                        <option value="romantique">Romantique</option>
+                        <option value="dramatique">Dramatique</option>
+                        <option value="joyeux">Joyeux</option>
+                    </select>
+                </label>
+                <label class="flex items-center gap-2 text-sm">
+                    <input id="rhyme-toggle" type="checkbox" class="w-4 h-4" />
+                    <span>Rimes</span>
+                </label>
+            </div>
+
+            <div id="poem-container" class="min-h-[150px] bg-gray-50 dark:bg-gray-700 rounded-lg p-6 mb-4 flex items-center justify-center transition-all duration-300">
+                <p id="poem-output" class="text-lg md:text-xl italic text-gray-700 dark:text-gray-300 whitespace-pre-line">Votre poème apparaîtra ici...</p>
+            </div>
+            <div class="flex items-center justify-center gap-4">
+                <button id="generate-btn" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-800">
+                    Générer un poème
+                </button>
+                <button id="copy-btn" class="hidden sm:inline-block bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg">Copier</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Galerie d'images moderne -->
+    <section id="galerie" class="w-full max-w-3xl mx-auto mt-12 mb-8 px-2">
+        <h2 class="text-2xl font-bold text-center text-cyan-700 dark:text-cyan-300 mb-6">Galerie</h2>
+        <div class="relative flex items-center justify-center">
+            <button id="prev-img" class="absolute left-0 z-10 bg-white/80 dark:bg-gray-700/80 hover:bg-indigo-200 dark:hover:bg-indigo-800 rounded-full p-2 shadow transition" aria-label="Image précédente">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600 dark:text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <img id="carousel-img" src="images/Screenshot_20250813-021123.jpg" alt="Galerie" class="carousel-img active mx-auto">
+            <button id="next-img" class="absolute right-0 z-10 bg-white/80 dark:bg-gray-700/80 hover:bg-indigo-200 dark:hover:bg-indigo-800 rounded-full p-2 shadow transition" aria-label="Image suivante">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600 dark:text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+        </div>
+        <div class="flex justify-center gap-2 mt-4" id="carousel-dots"></div>
+        <!-- Grille d'illustrations liées aux poèmes -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6" id="gallery-grid">
+            <figure class="bg-white/5 rounded-lg p-3 shadow hover:shadow-lg transition cursor-pointer" data-src="images/gallery1.svg">
+                <img src="images/gallery1.svg" alt="Lune" class="w-full h-40 object-cover rounded-md mb-2">
+                <figcaption>
+                    <div class="font-semibold">Lune</div>
+                    <div class="text-sm opacity-80">« La lune veille, douce en son voile... »</div>
+                </figcaption>
+            </figure>
+            <figure class="bg-white/5 rounded-lg p-3 shadow hover:shadow-lg transition cursor-pointer" data-src="images/gallery2.svg">
+                <img src="images/gallery2.svg" alt="Rivière" class="w-full h-40 object-cover rounded-md mb-2">
+                <figcaption>
+                    <div class="font-semibold">Rivière</div>
+                    <div class="text-sm opacity-80">« La rivière fredonne un chant qui s'enfuit... »</div>
+                </figcaption>
+            </figure>
+            <figure class="bg-white/5 rounded-lg p-3 shadow hover:shadow-lg transition cursor-pointer" data-src="images/gallery3.svg">
+                <img src="images/gallery3.svg" alt="Forêt" class="w-full h-40 object-cover rounded-md mb-2">
+                <figcaption>
+                    <div class="font-semibold">Forêt</div>
+                    <div class="text-sm opacity-80">« Sous les feuilles, un souffle ancien se tait... »</div>
+                </figcaption>
+            </figure>
+            <figure class="bg-white/5 rounded-lg p-3 shadow hover:shadow-lg transition cursor-pointer" data-src="images/gallery4.svg">
+                <img src="images/gallery4.svg" alt="Océan" class="w-full h-40 object-cover rounded-md mb-2">
+                <figcaption>
+                    <div class="font-semibold">Océan</div>
+                    <div class="text-sm opacity-80">« L'océan respire en vagues de mémoire... »</div>
+                </figcaption>
+            </figure>
+            <figure class="bg-white/5 rounded-lg p-3 shadow hover:shadow-lg transition cursor-pointer" data-src="images/gallery5.svg">
+                <img src="images/gallery5.svg" alt="Montagne" class="w-full h-40 object-cover rounded-md mb-2">
+                <figcaption>
+                    <div class="font-semibold">Montagne</div>
+                    <div class="text-sm opacity-80">« Le sommet garde les promesses du vent... »</div>
+                </figcaption>
+            </figure>
+            <figure class="bg-white/5 rounded-lg p-3 shadow hover:shadow-lg transition cursor-pointer" data-src="images/gallery6.svg">
+                <img src="images/gallery6.svg" alt="Étoile" class="w-full h-40 object-cover rounded-md mb-2">
+                <figcaption>
+                    <div class="font-semibold">Étoile</div>
+                    <div class="text-sm opacity-80">« Une étoile tombe pour couvrir la nuit... »</div>
+                </figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <!-- Contact & Footer -->
+    <footer id="contact" class="w-full bg-gradient-to-r from-indigo-600 to-cyan-500 dark:from-indigo-900 dark:to-cyan-800 text-white py-8 mt-auto">
+        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-start px-6">
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center gap-3">
+                    <img src="images/young_avatar.svg" alt="Young Expert" class="h-10 w-10 rounded-full border-2 border-white">
+                    <div>
+                        <div class="font-bold text-lg"><span class="text-orange-400">Young</span> <span class="text-white">Expert</span></div>
+                        <div class="text-sm opacity-80">Résultat de la formation Young Expert.</div>
+                    </div>
+                </div>
+                <p class="text-sm opacity-85">Ce site présente les créations issues de la <a href="https://youngexpertseditions.vercel.app" target="_blank" rel="noopener noreferrer" title="Young Expert — site officiel" class="underline text-orange-400">formation Young Expert</a>. Découvrez plus de poèmes et images sur notre galerie.</p>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="font-semibold">Contact</div>
+                <a href="mailto:optimumentreprise1@gmail.com" class="text-sm hover:text-yellow-200">optimumentreprise1@gmail.com</a>
+                <a href="tel:+243840665620" class="text-sm hover:text-yellow-200">+243 840 665 620</a>
+                <a href="#" class="text-sm hover:text-yellow-200">FAQ</a>
+                <a href="#" class="text-sm hover:text-yellow-200">Mentions légales</a>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="font-semibold">Réseaux</div>
+                <div class="flex gap-3">
+                    <a class="social-icon p-2 bg-white/10 rounded-lg hover:bg-white/20 flex items-center justify-center" href="https://www.facebook.com/profil.php?id=61573586472917" aria-label="Facebook" title="Facebook" target="_blank" rel="noopener noreferrer">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 10-11.5 9.9v-7h-2.2V12h2.2V9.8c0-2.2 1.3-3.4 3.3-3.4.96 0 1.96.17 1.96.17v2.1h-1.07c-1.05 0-1.37.65-1.37 1.32V12h2.33l-.37 2.9h-1.96v7A10 10 0 0022 12z"/></svg>
+                    </a>
+                    <a class="social-icon p-2 bg-white/10 rounded-lg hover:bg-white/20 flex items-center justify-center" href="https://wa.me/243840665620" aria-label="WhatsApp" title="WhatsApp" target="_blank" rel="noopener noreferrer">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.52 3.48A11.9 11.9 0 0012 0C5.37 0 .02 5.36.02 12a11.9 11.9 0 001.9 6.16L0 24l5.1-1.32A11.92 11.92 0 0012 24c6.63 0 11.98-5.36 11.98-12a11.9 11.9 0 00-3.46-8.52zM12 21.5c-1.63 0-3.24-.43-4.64-1.24l-.33-.19-3.03.78.8-2.95-.21-.3A8.5 8.5 0 013.5 12c0-4.69 3.81-8.5 8.5-8.5 4.69 0 8.5 3.81 8.5 8.5S16.69 21.5 12 21.5zm4.64-6.13c-.25-.12-1.48-.73-1.71-.81-.23-.08-.4-.12-.57.12-.18.25-.7.81-.86.98-.15.17-.3.19-.55.06-.25-.12-1.05-.39-2-1.24-.74-.66-1.24-1.48-1.38-1.73-.14-.25-.02-.38.1-.5.1-.1.23-.25.35-.38.12-.12.16-.2.25-.33.08-.13.04-.24-.02-.36-.06-.12-.57-1.37-.78-1.87-.2-.49-.41-.42-.57-.43-.15 0-.33-.01-.5-.01s-.36.05-.55.24c-.18.18-.7.68-.7 1.66s.72 1.93.82 2.07c.1.14 1.42 2.2 3.44 3.07 2.03.87 2.03.58 2.4.54.37-.04 1.17-.48 1.33-.94.16-.46.16-.85.11-.94-.05-.08-.18-.12-.43-.24z"/></svg>
+                    </a>
+                    <a class="social-icon p-2 bg-white/10 rounded-lg hover:bg-white/20 flex items-center justify-center" href="mailto:optimumentreprise1@gmail.com" aria-label="Email" title="Email">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 13.5L0 6v12a2 2 0 002 2h20a2 2 0 002-2V6l-12 7.5zM12 11L24 4H0l12 7z"/></svg>
+                    </a>
+                </div>
+                <div class="mt-2">
+                    <label class="text-sm block mb-1">Abonnez-vous :</label>
+                    <form id="subscribe-form" action="#" class="flex gap-2">
+                        <input id="subscribe-email" aria-label="email" type="email" placeholder="votre@email.com" class="flex-1 rounded-lg px-3 py-2 text-black/90" />
+                        <button id="subscribe-btn" class="px-4 py-2 rounded-lg bg-yellow-400 text-black font-semibold">OK</button>
+                    </form>
+                    <div id="subscribe-msg" class="text-sm mt-2 opacity-90"></div>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-5xl mx-auto mt-6 px-6 flex flex-col md:flex-row items-center justify-between text-sm opacity-80">
+            <div>© 2025 MonSite Créatif. Tous droits réservés.</div>
+            <div class="mt-3 md:mt-0">Design moderne • Résultats de la Formation Young Expert sous la supervision de <a href="https://portfoliodavidwawina.vercel.app" target="_blank" rel="noopener noreferrer"> David Wawina (Magnum)</a></div>
+        </div>
+    </footer>
+
+    <!-- Scripts pour fonctionnalités avancées -->
     <script>
-        // --- Éléments du DOM ---
+        // --- Générateur de poèmes (par thème) ---
         const generateBtn = document.getElementById('generate-btn');
         const poemOutput = document.getElementById('poem-output');
+    // note: dynamic theme buttons exist; we'll use delegated events and live queries
 
-        // --- Listes de mots pour la génération ---
-        // Vous pouvez enrichir ces listes pour plus de variété !
-        const noms = ["lune", "soleil", "rivière", "montagne", "océan", "forêt", "étoile", "rêve", "silence", "temps"];
-        const adjectifs = ["silencieux", "brillant", "sombre", "vaste", "ancien", "léger", "profond", "éphémère", "doux", "sauvage"];
-        const verbes = ["danse", "chante", "murmure", "observe", "voyage", "tombe", "s'élève", "se cache", "respire", "attend"];
-        const adverbes = ["lentement", "doucement", "toujours", "parfois", "jamais", "ici", "là-bas", "silencieusement", "rapidement"];
-        const prepositions = ["sur", "sous", "dans", "vers", "avec", "sans", "près de", "loin de"];
+        // Listes par thème
+        const themes = {
+            nature: {
+                noms: ["lune","rivière","montagne","océan","forêt","étoile","herbe","rosée","chêne","vallée"],
+                adjectifs: ["brillant","vaste","serein","sauvage","verdoyant","fragile","lumineux","murmurant","ancêtre","bleu"],
+                verbes: ["chante","murmure","respire","s'élève","ondule","s'étend","frissonne","soupire","ondoyer","trepide"],
+                adverbes: ["doucement","lentement","ici","là-bas","tendrement","silencieusement"]
+            },
+            melancolie: {
+                noms: ["silence","mémoire","ombre","pluie","cendre","souvenir","nid","fenêtre","hiver","papier"],
+                adjectifs: ["sombre","terne","écorchée","creuse","fragile","perdue","mélancolique","ancien"] ,
+                verbes: ["attend","pleure","se perd","s'efface","s'égare","soupire","se tait"],
+                adverbes: ["parfois","toujours","jamais","lentement","à peine"]
+            },
+            urbain: {
+                noms: ["rue","néon","toit","brique","métro","horloge","passant","balcon","cafés","trottoir"],
+                adjectifs: ["bruyant","froid","éclairé","effervescent","brouillé","asphalte"],
+                verbes: ["court","clignote","s'étire","gronde","résonne","s'accroche"],
+                adverbes: ["rapidement","furtivement","toujours","comme avant"]
+            },
+            ephemere: {
+                noms: ["souffle","instinct","éclair","goutte","hirondelle","papier","bougie","trace","rêve","rayon"],
+                adjectifs: ["éphémère","fragile","fugace","passager","brillant"],
+                verbes: ["fuit","s'évapore","s'éteint","brille","s'envole"],
+                adverbes: ["brièvement","subitement","à jamais","parfois"]
+            }
+        };
 
-        /**
-         * Sélectionne un élément aléatoire dans un tableau.
-         * @param {Array} arr - Le tableau dont il faut extraire un élément.
-         * @returns {*} - Un élément aléatoire du tableau.
-         */
-        function getRandomElement(arr) {
-            const randomIndex = Math.floor(Math.random() * arr.length);
-            return arr[randomIndex];
+        // helper
+        function getRandomElement(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+        // état de thème
+    let activeTheme = 'nature';
+    const linesSelect = document.getElementById('lines-select');
+    const toneSelect = document.getElementById('tone-select');
+    const rhymeToggle = document.getElementById('rhyme-toggle');
+
+        function setActiveTheme(name) {
+            activeTheme = name;
+            // live query so dynamic buttons are included
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                if (btn.dataset.theme === name) btn.classList.add('active'); else btn.classList.remove('active');
+            });
+            // enregistrer temporairement
+            localStorage.setItem('poem_theme', name);
+        }
+        // delegated handler: capture clicks on any element with .theme-btn
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest && e.target.closest('.theme-btn');
+            if (btn && btn.dataset && btn.dataset.theme) {
+                setActiveTheme(btn.dataset.theme);
+            }
+        });
+
+        // load settings
+        function loadSettings() {
+            const savedTheme = localStorage.getItem('poem_theme');
+            const savedLines = localStorage.getItem('poem_lines');
+            const savedTone = localStorage.getItem('poem_tone');
+            const savedRhyme = localStorage.getItem('poem_rhyme');
+            if (savedTheme) setActiveTheme(savedTheme);
+            if (savedLines) linesSelect.value = savedLines;
+            if (savedTone) toneSelect.value = savedTone;
+            if (savedRhyme) rhymeToggle.checked = savedRhyme === '1';
+        }
+        loadSettings();
+
+        // auto-save preferences when user changes controls
+        function persistSettings(){
+            localStorage.setItem('poem_theme', activeTheme);
+            localStorage.setItem('poem_lines', linesSelect.value);
+            localStorage.setItem('poem_tone', toneSelect.value);
+            localStorage.setItem('poem_rhyme', rhymeToggle.checked ? '1' : '0');
+        }
+        linesSelect.addEventListener('change', persistSettings);
+        toneSelect.addEventListener('change', persistSettings);
+        rhymeToggle.addEventListener('change', persistSettings);
+
+        function applyTone(word, tone){
+            // léger ajustement de mot pour le ton
+            if (tone === 'romantique') return word + (Math.random()<0.3? ' tendre':'');
+            if (tone === 'dramatique') return word + (Math.random()<0.3? ' funeste':'');
+            if (tone === 'joyeux') return word + (Math.random()<0.3? ' éclatant':'');
+            return word;
         }
 
-        /**
-         * Génère un poème en combinant des mots aléatoires selon des structures de phrases.
-         */
-        function generatePoem() {
-            // Différentes structures de vers possibles
-            const lineStructures = [
-                `Le ${getRandomElement(noms)} ${getRandomElement(adjectifs)} ${getRandomElement(verbes)}.`,
-                `${getRandomElement(adverbes)}, le ${getRandomElement(noms)} ${getRandomElement(verbes)}.`,
-                `Un ${getRandomElement(noms)} ${getRandomElement(adjectifs)} ${prepositions[Math.floor(Math.random() * prepositions.length)]} la ${getRandomElement(noms)}.`,
-                `Pourquoi le ${getRandomElement(noms)} ${getRandomElement(verbes)}-t-il si ${getRandomElement(adverbes)} ?`,
-                `${getRandomElement(adjectifs)}, le ${getRandomElement(noms)} ${getRandomElement(verbes)} ${getRandomElement(adverbes)}.`
-            ];
+        // typing animation control
+        let typingCancel = false;
+        function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-            // Créer un poème de 3 vers
-            let poem = [];
-            for (let i = 0; i < 3; i++) {
-                // Choisir une structure de vers aléatoire
-                let line = getRandomElement(lineStructures);
-                // Mettre la première lettre en majuscule
-                line = line.charAt(0).toUpperCase() + line.slice(1);
-                poem.push(line);
+        function getRhymeEnding(word){
+            const m = word.toLowerCase().match(/[aeiouyàâäéèêëîïôöùûü]+[^aeiouyàâäéèêëîïôöùûü]*$/i);
+            return m ? m[0] : word.slice(-2);
+        }
+        function findWordWithEnding(list, ending){
+            for(const w of list){ if(getRhymeEnding(w)===ending) return w; }
+            // fallback: return random and try to glue ending
+            const r = getRandomElement(list);
+            return r.replace(/[aeiouyàâäéèêëîïôöùûü]+[^aeiouyàâäéèêëîïôöùûü]*$/i, '') + ending;
+        }
+
+        async function typePoemLines(lines){
+            typingCancel = false;
+            poemOutput.textContent = '';
+            for(let i=0;i<lines.length;i++){
+                if(typingCancel) return;
+                const line = lines[i];
+                // type line
+                for(let j=0;j<line.length;j++){
+                    if(typingCancel) return;
+                    poemOutput.textContent += line[j];
+                    await sleep(18 + Math.random()*20);
+                }
+                if(i < lines.length-1) poemOutput.textContent += '\n';
+                await sleep(120);
+            }
+        }
+
+        async function generatePoem(){
+            // cancel any ongoing typing
+            typingCancel = true;
+            await sleep(30);
+            typingCancel = false;
+
+            const t = themes[activeTheme] || themes['nature'];
+            const numLines = parseInt(linesSelect.value || '3', 10);
+            const tone = toneSelect.value || 'neutral';
+            const rhyme = rhymeToggle.checked;
+
+            function pickLine(){
+                const structures = [
+                    `Le ${getRandomElement(t.noms)} ${getRandomElement(t.adjectifs)} ${getRandomElement(t.verbes)}.`,
+                    `${getRandomElement(t.adverbes)}, le ${getRandomElement(t.noms)} ${getRandomElement(t.verbes)}.`,
+                    `Un ${getRandomElement(t.noms)} ${getRandomElement(t.adjectifs)} ${getRandomElement(['sur','sous','dans','vers'])} la ${getRandomElement(t.noms)}.`,
+                    `Pourquoi le ${getRandomElement(t.noms)} ${getRandomElement(t.verbes)}-t-il si ${getRandomElement(t.adverbes)} ?`,
+                    `${getRandomElement(t.adjectifs)}, le ${getRandomElement(t.noms)} ${getRandomElement(t.verbes)} ${getRandomElement(t.adverbes)}.`
+                ];
+                let line = getRandomElement(structures);
+                line = line.replace(/\b(\w{3,})\b/g, (m)=> applyTone(m,tone));
+                return line;
             }
 
-            // Afficher le poème dans la page
-            poemOutput.textContent = poem.join('\n'); // Utilise '\n' pour les sauts de ligne, géré par 'whitespace-pre-line' en CSS
+            let poem = [];
+            for(let i=0;i<numLines;i++){
+                let line = pickLine();
+                poem.push(line.charAt(0).toUpperCase()+line.slice(1));
+            }
+
+            if(rhyme && poem.length>=2){
+                for(let i=0;i<poem.length;i+=2){
+                    // choose an ending from theme words
+                    const base = getRandomElement(t.noms.concat(t.adjectifs));
+                    const ending = getRhymeEnding(base);
+                    const w1 = findWordWithEnding(t.noms.concat(t.adjectifs, t.verbes), ending);
+                    const w2 = findWordWithEnding(t.noms.concat(t.adjectifs, t.verbes), ending);
+                    poem[i] = poem[i].replace(/(\b[\w'’À-ÿ-]+)([!.?])?$/, `${w1}.`);
+                    if(i+1<poem.length) poem[i+1] = poem[i+1].replace(/(\b[\w'’À-ÿ-]+)([!.?])?$/, `${w2}.`);
+                }
+            }
+
+            await typePoemLines(poem);
         }
+        generateBtn.addEventListener('click', ()=>{ generatePoem(); });
 
-        // --- Écouteur d'événement ---
-        // Génère un nouveau poème lorsque l'utilisateur clique sur le bouton.
-        generateBtn.addEventListener('click', generatePoem);
+        // --- Carrousel d'images ---
+        const images = [
+            "images/Screenshot_20250813-021123.jpg",
+            "images/image2.jpg",
+            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80"
+        ];
+        const carouselImg = document.getElementById('carousel-img');
+        const prevImgBtn = document.getElementById('prev-img');
+        const nextImgBtn = document.getElementById('next-img');
+        const carouselDots = document.getElementById('carousel-dots');
+        let currentImg = 0;
+        function updateCarousel() {
+            carouselImg.src = images[currentImg];
+            Array.from(carouselDots.children).forEach((dot, idx) => {
+                dot.className = 'w-3 h-3 rounded-full mx-1 ' + (idx === currentImg ? 'bg-indigo-600 dark:bg-indigo-300' : 'bg-gray-300 dark:bg-gray-600');
+            });
+        }
+        function goToImg(idx) {
+            currentImg = (idx + images.length) % images.length;
+            updateCarousel();
+        }
+        prevImgBtn.addEventListener('click', () => goToImg(currentImg - 1));
+        nextImgBtn.addEventListener('click', () => goToImg(currentImg + 1));
+        // Dots
+        images.forEach((_, idx) => {
+            const dot = document.createElement('button');
+            dot.className = 'w-3 h-3 rounded-full mx-1 bg-gray-300 dark:bg-gray-600';
+            dot.addEventListener('click', () => goToImg(idx));
+            carouselDots.appendChild(dot);
+        });
+        updateCarousel();
 
+        // --- Galerie interactive : cliquer sur une vignette remplace l'image principale ---
+        (function setupGallery() {
+            const gallery = document.getElementById('gallery-grid');
+            const mainImg = document.getElementById('carousel-img');
+            if (!gallery || !mainImg) return;
+
+            function selectThumb(figure) {
+                const src = figure.dataset.src;
+                if (src) {
+                    mainImg.src = src;
+                    // visual mark
+                    gallery.querySelectorAll('figure').forEach(f => f.classList.remove('ring-2','ring-yellow-300'));
+                    figure.classList.add('ring-2','ring-yellow-300');
+                    try{ mainImg.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){}
+                }
+            }
+
+            gallery.addEventListener('click', (e) => {
+                const figure = e.target.closest && e.target.closest('figure');
+                if (!figure) return;
+                selectThumb(figure);
+            });
+
+            // keyboard accessibility
+            gallery.querySelectorAll('figure').forEach(fig => {
+                fig.setAttribute('tabindex', '0');
+                fig.addEventListener('keydown', (ev) => {
+                    if (ev.key === 'Enter' || ev.key === ' ') {
+                        ev.preventDefault();
+                        selectThumb(fig);
+                    }
+                });
+            });
+        })();
+
+        // --- Thèmes étendus (100) + recherche / carrousel ---
+        const themeCarousel = document.getElementById('theme-carousel');
+        const themeSearch = document.getElementById('theme-search');
+        const themePrev = document.getElementById('theme-prev');
+        const themeNext = document.getElementById('theme-next');
+
+        // 100 thèmes réels variés
+        const extendedThemes = [
+            'Amour','Saisons','Voyage','Nuit','Matin','Mer','Montagne','Forêt','Désert','Ville',
+            'Enfance','Souvenirs','Rêve','Espoir','Perte','Rencontre','Adieu','Fête','Silence','Révolte',
+            'Technologie','Espace','Animaux','Cuisine','Musique','Danse','Théâtre','Peinture','Art','Lumière',
+            'Ombre','Couleur','Mémoire','Temps','Histoire','Futur','Passé','Amitié','Solitude','Nature',
+            'Émotion','Poésie urbaine','Campagne','Rivière','Océan','Ciel','Pluie','Neige','Automne','Printemps',
+            'Hiver','Été','Romantisme','Humour','Ironie','Mystère','Fantaisie','Surnaturel','Mythologie','Légendes',
+            'Sport','Aventure','Exploration','Réalité','Métaphore','Sérénité','Chaos','Paix','Guerre','Liberté',
+            'Justice','Injustice','Rébellion','Politique','Science','Philosophie','Religion','Spiritualité','Existence','Destin',
+            'École','Travail','Métier','Route','Pont','Maison','Famille','Parenté','Naissance','Mort',
+            'Courage','Peur','Rire','Larmes','Murmures','Cri','Écriture','Lecture','Cuisine du monde','Jardin'
+        ].map((name,i)=> ({id:`t${i+1}`, name}));
+
+        function renderThemeCarousel(list){
+            themeCarousel.innerHTML = '';
+            list.forEach(t => {
+                const btn = document.createElement('button');
+                btn.className = 'theme-btn px-3 py-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm flex items-center gap-2';
+                // simple emoji/icon selector based on keywords
+                const iconSpan = document.createElement('span');
+                iconSpan.className = 'inline-block w-6';
+                const nameLower = t.name.toLowerCase();
+                const icons = {
+                    'amour':'💖','saisons':'🍂','voyage':'✈️','nuit':'🌙','matin':'🌅','mer':'🌊','montagne':'⛰️','forêt':'🌳','désert':'🏜️','ville':'🏙️',
+                    'musique':'🎵','danse':'💃','peinture':'🎨','espace':'🚀','animaux':'🐾','cuisine':'🍽️','rêve':'💭','silence':'🤫'
+                };
+                let chosen = icons[nameLower.split(' ')[0]] || '📝';
+                iconSpan.textContent = chosen;
+                btn.appendChild(iconSpan);
+                const text = document.createElement('span'); text.textContent = t.name; btn.appendChild(text);
+                btn.dataset.theme = t.id;
+                btn.addEventListener('click', ()=>{
+                    // when clicked, register as active theme and create simple theme mapping
+                    // build a small theme entry if not exist
+                    if(!themes[t.id]){
+                        themes[t.id] = {
+                            noms: [t.name.toLowerCase().split(' ')[1] || 'écho', 'ombre','lumière'],
+                            adjectifs: ['brillant','sombre','léger'],
+                            verbes: ['chante','respire','frissonne'],
+                            adverbes: ['doucement','parfois']
+                        };
+                    }
+                    setActiveTheme(t.id);
+                });
+                themeCarousel.appendChild(btn);
+            });
+        }
+        renderThemeCarousel(extendedThemes);
+
+        // scroll buttons
+        themePrev.addEventListener('click', ()=>{ themeCarousel.scrollBy({left:-240, behavior:'smooth'}); });
+        themeNext.addEventListener('click', ()=>{ themeCarousel.scrollBy({left:240, behavior:'smooth'}); });
+
+        // search
+        // simple fuzzy search: score by substring and character sequence
+        function fuzzyFilter(list, q){
+            if(!q) return list;
+            const s = q.toLowerCase().trim();
+            return list.map(t=>{
+                const name = t.name.toLowerCase();
+                let score = 0;
+                if(name.includes(s)) score += 10;
+                let idx = 0; for(const ch of s){ idx = name.indexOf(ch, idx); if(idx===-1){ score -= 2; break; } else { score += 1; idx++; } }
+                return {t,score};
+            }).filter(x=> x.score> -5).sort((a,b)=> b.score-a.score).map(x=> x.t);
+        }
+        themeSearch.addEventListener('input', (e)=>{
+            const q = e.target.value;
+            const filtered = fuzzyFilter(extendedThemes, q);
+            renderThemeCarousel(filtered.length?filtered:extendedThemes);
+        });
+
+        // export/import settings
+        const exportBtn = document.getElementById('export-settings');
+        const importFile = document.getElementById('import-file');
+        exportBtn.addEventListener('click', ()=>{
+            const data = {
+                theme: localStorage.getItem('poem_theme')||activeTheme,
+                lines: localStorage.getItem('poem_lines')||linesSelect.value,
+                tone: localStorage.getItem('poem_tone')||toneSelect.value,
+                rhyme: localStorage.getItem('poem_rhyme')|| (rhymeToggle.checked? '1':'0')
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'poem-settings.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        });
+        importFile.addEventListener('change', (e)=>{
+            const f = e.target.files[0]; if(!f) return;
+            const reader = new FileReader();
+            reader.onload = ()=>{
+                try{
+                    const obj = JSON.parse(reader.result);
+                    if(obj.theme) setActiveTheme(obj.theme);
+                    if(obj.lines) linesSelect.value = obj.lines;
+                    if(obj.tone) toneSelect.value = obj.tone;
+                    if(obj.rhyme) rhymeToggle.checked = obj.rhyme === '1';
+                    persistSettings();
+                }catch(err){ console.error('Import invalide',err); }
+            };
+            reader.readAsText(f);
+        });
+
+        // --- Copier le poème ---
+        const copyBtn = document.getElementById('copy-btn');
+        copyBtn.addEventListener('click', async ()=>{
+            try{
+                const text = poemOutput.textContent;
+                await navigator.clipboard.writeText(text);
+                copyBtn.textContent = 'Copié ✓';
+                setTimeout(()=> copyBtn.textContent = 'Copier', 1500);
+            }catch(e){
+                // fallback
+                const ta = document.createElement('textarea'); ta.value = poemOutput.textContent; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+                copyBtn.textContent = 'Copié ✓';
+                setTimeout(()=> copyBtn.textContent = 'Copier', 1500);
+            }
+        });
+
+        // show copy button when poem available
+        const observer = new MutationObserver(()=>{
+            copyBtn.classList.toggle('hidden', !poemOutput.textContent.trim());
+        });
+        observer.observe(poemOutput, {childList:true, subtree:true, characterData:true});
+
+        // Diagnostic au chargement
+        function runDiagnostics(){
+            const required = ['generate-btn','poem-output','theme-carousel','theme-search','lines-select','tone-select','copy-btn'];
+            required.forEach(id=>{
+                if(!document.getElementById(id)) console.warn(`Diagnostic: élément manquant -> ${id}`);
+            });
+            console.log('Diagnostic: thèmes disponibles:', extendedThemes.length);
+        }
+        window.addEventListener('load', runDiagnostics);
+
+        // Subscription form handling (validate + store)
+        const subscribeForm = document.getElementById('subscribe-form');
+        const subscribeEmail = document.getElementById('subscribe-email');
+        const subscribeMsg = document.getElementById('subscribe-msg');
+        function validateEmail(email){
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+        subscribeForm.addEventListener('submit', (e)=>{
+            e.preventDefault();
+            const val = subscribeEmail.value.trim();
+            if(!validateEmail(val)){
+                subscribeMsg.textContent = 'Adresse email invalide.'; subscribeMsg.style.color = '#ffb0b0'; return;
+            }
+            // store
+            let list = JSON.parse(localStorage.getItem('subscribers')||'[]');
+            if(!list.includes(val)) list.push(val);
+            localStorage.setItem('subscribers', JSON.stringify(list));
+            subscribeMsg.textContent = 'Merci! Email enregistré.'; subscribeMsg.style.color = '#bbffbb';
+            subscribeEmail.value = '';
+            setTimeout(()=> subscribeMsg.textContent = '', 3000);
+        });
+
+        // --- Mode sombre/clair ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        function setTheme(dark) {
+            if (dark) {
+                document.documentElement.classList.add('dark');
+                themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />';
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-13.66l-.71.71M4.05 19.07l-.71.71M21 12h-1M4 12H3m16.66 5.66l-.71-.71M4.05 4.93l-.71-.71M16 12a4 4 0 11-8 0 4 4 0 018 0z" />';
+            }
+        }
+        // Initialisation du thème
+        let darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(darkMode);
+        themeToggle.addEventListener('click', () => {
+            darkMode = !darkMode;
+            setTheme(darkMode);
+        });
     </script>
-
 </body>
 </html>
 
