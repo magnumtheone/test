@@ -3,24 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page avec deux images</title>
+    <title>Générateur de Poèmes</title>
+    <!-- Chargement de Tailwind CSS pour un design moderne et réactif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Utilisation de la police Inter pour une meilleure lisibilité -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
     <style>
+        /* Appliquer des polices personnalisées */
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 40px;
+            font-family: 'Inter', sans-serif;
         }
-        img {
-            max-width: 400px;
-            margin: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        #poem-output {
+            font-family: 'Lora', serif;
         }
     </style>
 </head>
-<body>
-    <h1>Ma page avec deux images</h1>
-    <img src="images/Screenshot_20250813-021123.jpg" alt="Image 1">
-    <img src="images/img.jpg" alt="Image 2">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Conteneur principal de l'application -->
+    <div class="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center">
+        
+        <!-- Titre de l'application -->
+        <h1 class="text-3xl md:text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-4">Générateur de Poèmes</h1>
+        <p class="text-gray-600 dark:text-gray-400 mb-8">Cliquez sur le bouton pour composer un poème unique et surprenant.</p>
+
+        <!-- Zone d'affichage pour le poème généré -->
+        <div id="poem-container" class="min-h-[150px] bg-gray-50 dark:bg-gray-700 rounded-lg p-6 mb-8 flex items-center justify-center transition-all duration-300">
+            <p id="poem-output" class="text-lg md:text-xl italic text-gray-700 dark:text-gray-300 whitespace-pre-line">Votre poème apparaîtra ici...</p>
+        </div>
+
+        <!-- Bouton pour générer un nouveau poème -->
+        <button id="generate-btn" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-800">
+            Générer un poème
+        </button>
+
+    </div>
+
+    <script>
+        // --- Éléments du DOM ---
+        const generateBtn = document.getElementById('generate-btn');
+        const poemOutput = document.getElementById('poem-output');
+
+        // --- Listes de mots pour la génération ---
+        // Vous pouvez enrichir ces listes pour plus de variété !
+        const noms = ["lune", "soleil", "rivière", "montagne", "océan", "forêt", "étoile", "rêve", "silence", "temps"];
+        const adjectifs = ["silencieux", "brillant", "sombre", "vaste", "ancien", "léger", "profond", "éphémère", "doux", "sauvage"];
+        const verbes = ["danse", "chante", "murmure", "observe", "voyage", "tombe", "s'élève", "se cache", "respire", "attend"];
+        const adverbes = ["lentement", "doucement", "toujours", "parfois", "jamais", "ici", "là-bas", "silencieusement", "rapidement"];
+        const prepositions = ["sur", "sous", "dans", "vers", "avec", "sans", "près de", "loin de"];
+
+        /**
+         * Sélectionne un élément aléatoire dans un tableau.
+         * @param {Array} arr - Le tableau dont il faut extraire un élément.
+         * @returns {*} - Un élément aléatoire du tableau.
+         */
+        function getRandomElement(arr) {
+            const randomIndex = Math.floor(Math.random() * arr.length);
+            return arr[randomIndex];
+        }
+
+        /**
+         * Génère un poème en combinant des mots aléatoires selon des structures de phrases.
+         */
+        function generatePoem() {
+            // Différentes structures de vers possibles
+            const lineStructures = [
+                `Le ${getRandomElement(noms)} ${getRandomElement(adjectifs)} ${getRandomElement(verbes)}.`,
+                `${getRandomElement(adverbes)}, le ${getRandomElement(noms)} ${getRandomElement(verbes)}.`,
+                `Un ${getRandomElement(noms)} ${getRandomElement(adjectifs)} ${prepositions[Math.floor(Math.random() * prepositions.length)]} la ${getRandomElement(noms)}.`,
+                `Pourquoi le ${getRandomElement(noms)} ${getRandomElement(verbes)}-t-il si ${getRandomElement(adverbes)} ?`,
+                `${getRandomElement(adjectifs)}, le ${getRandomElement(noms)} ${getRandomElement(verbes)} ${getRandomElement(adverbes)}.`
+            ];
+
+            // Créer un poème de 3 vers
+            let poem = [];
+            for (let i = 0; i < 3; i++) {
+                // Choisir une structure de vers aléatoire
+                let line = getRandomElement(lineStructures);
+                // Mettre la première lettre en majuscule
+                line = line.charAt(0).toUpperCase() + line.slice(1);
+                poem.push(line);
+            }
+
+            // Afficher le poème dans la page
+            poemOutput.textContent = poem.join('\n'); // Utilise '\n' pour les sauts de ligne, géré par 'whitespace-pre-line' en CSS
+        }
+
+        // --- Écouteur d'événement ---
+        // Génère un nouveau poème lorsque l'utilisateur clique sur le bouton.
+        generateBtn.addEventListener('click', generatePoem);
+
+    </script>
+
 </body>
 </html>
+
